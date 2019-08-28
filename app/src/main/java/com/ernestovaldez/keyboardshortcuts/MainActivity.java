@@ -1,5 +1,8 @@
 package com.ernestovaldez.keyboardshortcuts;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 
 import com.ernestovaldez.keyboardshortcuts.DTO.Shortcut;
@@ -13,12 +16,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -33,6 +34,7 @@ import butterknife.OnClick;
 
 public class MainActivity extends MainBaseActivity {
 
+    public static final int READ_STORAGE_REQUEST_CODE = 1997;
     @BindView(R.id.edtShortcutName)
     EditText edtShortcutName;
 
@@ -92,6 +94,41 @@ public class MainActivity extends MainBaseActivity {
         String currentKeys = lblAllKeys.getText().toString();
         lblAllKeys.setText(currentKeys + key + " ");
         actKeys.setText("");
+    }
+
+    @OnClick(R.id.btnOpenGallery)
+    public void onBtnOpenGalleryClicked(){
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+
+            openGallery();
+
+        } else {
+
+            String[] permissionRequest = {Manifest.permission.READ_EXTERNAL_STORAGE};
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(permissionRequest, READ_STORAGE_REQUEST_CODE);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        //are we hearing back from read storage?
+        if(requestCode == READ_STORAGE_REQUEST_CODE){
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                //we are ok to open the gallery
+                openGallery();
+            }else {
+                //the permission was not granted
+                Toast.makeText(this, R.string.storage_permission, Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    private void openGallery(){
+        Toast.makeText(this, "Gallery Opened", Toast.LENGTH_LONG).show();
     }
 
     @OnClick(R.id.btnSave)
