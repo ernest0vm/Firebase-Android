@@ -1,6 +1,9 @@
 package com.ernestovaldez.keyboardshortcuts;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -17,6 +20,8 @@ import com.google.firebase.database.ValueEventListener;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import android.view.View;
@@ -35,6 +40,8 @@ import butterknife.OnClick;
 public class MainActivity extends MainBaseActivity {
 
     public static final int READ_STORAGE_REQUEST_CODE = 1997;
+    public static final String SHORTCUT_CHANNEL_ID = "SHORTCUT_CHANNEL_ID";
+
     @BindView(R.id.edtShortcutName)
     EditText edtShortcutName;
 
@@ -62,8 +69,9 @@ public class MainActivity extends MainBaseActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+                createAndShowNotification();
             }
         });
 
@@ -85,6 +93,36 @@ public class MainActivity extends MainBaseActivity {
 
             }
         });
+
+        //initialize our notification channel
+        createNotificationChannel();
+    }
+
+    private void createNotificationChannel(){
+        //define the channel
+        String name = "Shortcuts";
+        NotificationChannel channel = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            channel = new NotificationChannel(SHORTCUT_CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
+            channel.setDescription("A channel for shortcuts");
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    private void createAndShowNotification(){
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, SHORTCUT_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("Notification Title")
+                .setContentText("Notification Text");
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        notificationManager.notify(1,builder.build());
     }
 
     @OnClick(R.id.btnAddKey)
