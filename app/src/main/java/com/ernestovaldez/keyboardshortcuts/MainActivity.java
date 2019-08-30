@@ -5,6 +5,8 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.ImageDecoder;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -27,9 +29,11 @@ import androidx.core.content.ContextCompat;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +54,9 @@ public class MainActivity extends MainBaseActivity {
 
     @BindView(R.id.lblAllKeys)
     TextView lblAllKeys;
+
+    @BindView(R.id.imageView)
+    ImageView image;
 
     List<String> allKeys;
 
@@ -120,6 +127,20 @@ public class MainActivity extends MainBaseActivity {
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("Notification Title")
                 .setContentText("Notification Text");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            ImageDecoder.Source source = ImageDecoder.createSource(getResources(), R.raw.testpicture);
+
+            try {
+                Bitmap bitmap = ImageDecoder.decodeBitmap(source);
+                builder.setStyle(new NotificationCompat.BigPictureStyle().bigPicture(bitmap));
+
+                //image.setImageBitmap(bitmap);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
         notificationManager.notify(1,builder.build());
