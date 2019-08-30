@@ -22,6 +22,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver android:name=".VoteReceiver">
+            <intent-filter>
+                <action android:name="VOTE_RECEIVER"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
