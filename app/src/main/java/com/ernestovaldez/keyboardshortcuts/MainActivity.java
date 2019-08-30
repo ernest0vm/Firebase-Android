@@ -13,6 +13,9 @@ import android.os.Build;
 import android.os.Bundle;
 
 import com.ernestovaldez.keyboardshortcuts.DTO.Shortcut;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.FirebaseApp;
@@ -21,6 +24,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageMetadata;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -65,6 +72,7 @@ public class MainActivity extends MainBaseActivity {
     ImageView image;
 
     List<String> allKeys;
+    Uri imageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -210,7 +218,8 @@ public class MainActivity extends MainBaseActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK){
             if (requestCode == GALLERY_REQUEST_CODE){
-                Uri imageUri = data.getData();
+
+                imageUri = data.getData();
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     ImageDecoder.Source source = ImageDecoder.createSource(getContentResolver(), imageUri);
@@ -224,12 +233,43 @@ public class MainActivity extends MainBaseActivity {
                     }
                 }
             }
-
         }
     }
 
     @OnClick(R.id.btnSave)
     public void saveShortcut(){
+
+        if(imageUri != null) {
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference();
+
+            final StorageReference imageRef = storageReference.child("images/" + imageUri.getLastPathSegment());
+            UploadTask uploadTask = imageRef.putFile(imageUri);
+
+            uploadTask.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    //TODO handle this error
+                    int i = 1 + 1;
+
+                }
+            });
+            uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    StorageMetadata metadata = taskSnapshot.getMetadata();
+                    Task<Uri> downloadUrlTask = imageRef.getDownloadUrl();
+                    downloadUrlTask.addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            String link = uri.toString();
+                            int i = 1 + 1;
+                        }
+                    });
+                    int i = 1 + 1;
+                }
+            });
+        }
+
         Shortcut shortcut = new Shortcut();
         shortcut.setName(edtShortcutName.getText().toString());
         shortcut.setKeys(allKeys);
