@@ -13,6 +13,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.ernestovaldez.keyboardshortcuts.DTO.Shortcut;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -64,6 +67,7 @@ public class MainActivity extends MainBaseActivity {
     public static final String VOTE_TYPE = "VOTE_TYPE";
     public static final int VOTE_UP = 1;
     public static final int VOTE_DOWN = 0;
+    public static final String SHORTCUT = "SHORTCUT";
 
     @BindView(R.id.edtShortcutName)
     EditText edtShortcutName;
@@ -98,7 +102,7 @@ public class MainActivity extends MainBaseActivity {
             public void onClick(View view) {
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
-                createAndShowNotification();
+                //createAndShowNotification();
             }
         });
 
@@ -109,10 +113,18 @@ public class MainActivity extends MainBaseActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 Iterable<DataSnapshot> children = dataSnapshot.getChildren();
 
+                List<Shortcut> allShortcuts = new ArrayList<Shortcut>();
                 for (DataSnapshot child : children){
                     Shortcut shortcut = child.getValue(Shortcut.class);
-                    Toast.makeText(getApplicationContext(), shortcut.toString(), Toast.LENGTH_LONG).show();
+                    shortcut.setKey(child.getKey());
+                    allShortcuts.add(shortcut);
+                    //Toast.makeText(getApplicationContext(), shortcut.toString(), Toast.LENGTH_LONG).show();
                 }
+
+                int randomShortcut = (int) (allShortcuts.size() * Math.random());
+                Shortcut shortcut = allShortcuts.get(randomShortcut);
+
+                createAndShowNotification(shortcut);
             }
 
             @Override
@@ -142,13 +154,14 @@ public class MainActivity extends MainBaseActivity {
         }
     }
 
-    private void createAndShowNotification(){
+    private void createAndShowNotification(Shortcut shortcut){
 
         //this is what we want the pending intent do.
         Intent intent = new Intent(this, VoteReceiver.class);
         intent.setAction(VOTE_RECEIVER);
         intent.putExtra(SHORTCUT_ID, 0);
         intent.putExtra(VOTE_TYPE, VOTE_UP);
+        intent.putExtra(SHORTCUT, shortcut);
 
         //now, wrap our intent in a pending intent.
         PendingIntent votePendingIntent = PendingIntent.getBroadcast(this.getApplicationContext(), 10, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -158,33 +171,49 @@ public class MainActivity extends MainBaseActivity {
         downIntent.setAction(VOTE_RECEIVER);
         downIntent.putExtra(SHORTCUT_ID, 0);
         downIntent.putExtra(VOTE_TYPE, VOTE_DOWN);
+        downIntent.putExtra(SHORTCUT, shortcut);
 
         //now, wrap our intent in a pending intent.
         PendingIntent voteDownPendingIntent = PendingIntent.getBroadcast(this.getApplicationContext(), 20, downIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, SHORTCUT_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("Notification Title")
-                .setContentText("Notification Text")
+                .setContentTitle(shortcut.getName() + " " + shortcut.getKeys())
+                .setContentText(shortcut.getDescription())
                 .addAction(R.drawable.ic_thumb_up_24dp, "Vote Up", votePendingIntent)
                 .addAction(R.drawable.ic_thumb_down_24dp, "Vote Down", voteDownPendingIntent);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            ImageDecoder.Source source = ImageDecoder.createSource(getResources(), R.raw.testpicture);
+        //Using Glide library
+        if(shortcut.getImageUri() != null && !shortcut.getImageUri().isEmpty()) {
+            //use this path to show a notification with an image.
+            Glide.with(this).asBitmap().load(shortcut.getImageUri()).into(new SimpleTarget<Bitmap>() {
+                @Override
+                public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                    builder.setStyle(new NotificationCompat.BigPictureStyle().bigPicture(resource));
+                    notificationManager.notify(1, builder.build());
+                }
+            });
 
-            try {
-                Bitmap bitmap = ImageDecoder.decodeBitmap(source);
-                builder.setStyle(new NotificationCompat.BigPictureStyle().bigPicture(bitmap));
-
-                //image.setImageBitmap(bitmap);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            //Using ImageDecoder
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+//                ImageDecoder.Source source = ImageDecoder.createSource(getResources(), R.raw.testpicture);
+//
+//                try {
+//                    Bitmap bitmap = ImageDecoder.decodeBitmap(source);
+//                    builder.setStyle(new NotificationCompat.BigPictureStyle().bigPicture(bitmap));
+//
+//                    //image.setImageBitmap(bitmap);
+//
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+        }else {
+            //we have not an image to show
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+            notificationManager.notify(1, builder.build());
         }
-
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        notificationManager.notify(1,builder.build());
     }
 
     @OnClick(R.id.btnAddKey)
@@ -267,6 +296,10 @@ public class MainActivity extends MainBaseActivity {
     @OnClick(R.id.btnSave)
     public void saveShortcut(){
 
+        final FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+        final DatabaseReference reference = firebaseDatabase.getReference();
+        final Shortcut shortcut = new Shortcut();
+
         if(imageUri != null) {
             StorageReference storageReference = FirebaseStorage.getInstance().getReference();
 
@@ -290,7 +323,7 @@ public class MainActivity extends MainBaseActivity {
                         @Override
                         public void onSuccess(Uri uri) {
                             String link = uri.toString();
-                            int i = 1 + 1;
+                            reference.child("root").child(shortcut.getKey()).child("imageUri").setValue(link);
                         }
                     });
                     int i = 1 + 1;
@@ -298,13 +331,13 @@ public class MainActivity extends MainBaseActivity {
             });
         }
 
-        Shortcut shortcut = new Shortcut();
         shortcut.setName(edtShortcutName.getText().toString());
         shortcut.setKeys(allKeys);
+        shortcut.setImageUri("");
 
-        FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
-        DatabaseReference reference = firebaseDatabase.getReference();
-        reference.child("root").push().setValue(shortcut);
+        DatabaseReference childReference = firebaseDatabase.getReference().child("root").push();
+        childReference.setValue(shortcut);
+        shortcut.setKey(childReference.getKey());
 
         allKeys = new ArrayList<String>();
         lblAllKeys.setText("");

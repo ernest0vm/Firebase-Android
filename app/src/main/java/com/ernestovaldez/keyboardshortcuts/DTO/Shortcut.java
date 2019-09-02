@@ -1,16 +1,54 @@
 package com.ernestovaldez.keyboardshortcuts.DTO;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Shortcut {
+public class Shortcut implements Serializable {
 
     private String name;
     private List<String> keys;
     private String description;
+    private String imageUri;
+    private int upVote;
+    private int downVote;
+    private String key;
+
 
     public Shortcut() {
         keys = new ArrayList<String>();
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getImageUri() {
+        return imageUri;
+    }
+
+    public void setImageUri(String imageUri) {
+        this.imageUri = imageUri;
+    }
+
+    public int getUpVote() {
+        return upVote;
+    }
+
+    public void setUpVote(int upVote) {
+        this.upVote = upVote;
+    }
+
+    public int getDownVote() {
+        return downVote;
+    }
+
+    public void setDownVote(int downVote) {
+        this.downVote = downVote;
     }
 
     public String getName() {
