@@ -17,7 +17,15 @@
 
 - Go to in develop > database
 - create a new realtime database and name it.
-- select security rules for public (read/write = true)
+- set in the rules
+```
+    {
+        "rules": {
+            ".read": true,
+            ".write": true
+        }
+    }
+```
 - change **null** value by **root**
 
 ## Create a Cloud Storage
@@ -27,7 +35,14 @@
 - define data center (if not defined previously)
 - set in the rules
 ```
-    allow read, write;
+    rules_version = '2';
+    service firebase.storage {
+        match /b/{bucket}/o {
+             match /{allPaths=**} {
+                allow read, write;
+            }
+        }
+    }
 ```
 - create a new folder named **images**
 
