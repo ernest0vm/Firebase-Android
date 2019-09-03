@@ -316,7 +316,8 @@ public class MainActivity extends MainBaseActivity {
         } else {
             // we need to authenticate.
             List<AuthUI.IdpConfig> providers = Arrays.asList(
-                    new AuthUI.IdpConfig.EmailBuilder().build());
+                    new AuthUI.IdpConfig.EmailBuilder().build(),
+                    new AuthUI.IdpConfig.GoogleBuilder().build());
             // start the activity that will prompt the user to login.
             startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder()
                     .setAvailableProviders(providers).build(), AUTH_REQUEST_CODE);
@@ -368,9 +369,11 @@ public class MainActivity extends MainBaseActivity {
         childReference.setValue(shortcut);
         shortcut.setKey(childReference.getKey());
 
+        //clear all fields
         allKeys = new ArrayList<String>();
         lblAllKeys.setText("");
         edtShortcutName.setText("");
+        image.setImageBitmap(null);
     }
 
 }

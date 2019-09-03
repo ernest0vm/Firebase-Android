@@ -17,12 +17,21 @@
 
 - Go to in develop > database
 - create a new realtime database and name it.
-- set in the rules
+- set in the rules (without authentication)
 ```
     {
         "rules": {
             ".read": true,
             ".write": true
+        }
+    }
+```
+- or set in the rules (with authentication)
+```
+    {
+        "rules": {
+            ".read": true,
+            ".write": "auth !== null"
         }
     }
 ```
@@ -45,6 +54,30 @@
     }
 ```
 - create a new folder named **images**
+
+## Google Auth
+
+- needs configure the SHA1 fingerprint in the Firebase project settings, to obtain it can be run a command in console:
+
+**For Debug mode:**
+```
+    keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android 
+```
+**for Release mode:**
+```
+    keytool -list -v -keystore {keystore_name} -alias {alias_name}
+```
+**example:**
+```
+    keytool -list -v -keystore C:\Users\MG\Desktop\test.jks -alias test
+```
+**or in Android Studio use simple step:**
+
+- Run your project
+- Click on **Gradle** menu
+- Expand **Gradle app -> Tasks** tree
+- Double click on **android -> signingReport** and see the magic
+- It will tell you everything on the **Run** tab
 
 ## In the android app project
 
