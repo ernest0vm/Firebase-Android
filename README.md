@@ -15,7 +15,7 @@
 
 ## Create a RealTime database
 
-- Go to in develop > database
+- Go to in **develop** > **database**
 - create a new realtime database and name it.
 - set in the rules (without authentication)
 ```
@@ -39,7 +39,7 @@
 
 ## Create a Cloud Storage
 
-- Go to in develop > storage
+- Go to in **develop** > **storage**
 - create new storage
 - define data center (if not defined previously)
 - set in the rules
@@ -55,8 +55,12 @@
 ```
 - create a new folder named **images**
 
-## Google Auth
+## Email and Google Authentication
 
+- Go to in **develop** > **authentication** > **Sing-in Method**
+- Enable **Email/Password** and **Google**
+
+**For Google Auth**
 - needs configure the SHA1 fingerprint in the Firebase project settings, to obtain it can be run a command in console:
 
 **For Debug mode:**
