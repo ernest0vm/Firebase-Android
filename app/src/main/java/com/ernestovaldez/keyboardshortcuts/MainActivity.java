@@ -73,6 +73,8 @@ public class MainActivity extends MainBaseActivity {
     public static final int VOTE_DOWN = 0;
     public static final String SHORTCUT = "SHORTCUT";
     public static final int AUTH_REQUEST_CODE = 1997;
+    public static final int CAMERA_REQUEST_CODE = 1996;
+    public static final int CAMERA_PERMISSION_REQUEST_CODE = 29;
     private FirebaseAuth mAuth;
     private FirebaseUser user = null;
 
@@ -110,7 +112,18 @@ public class MainActivity extends MainBaseActivity {
             public void onClick(View view) {
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
-                //createAndShowNotification();
+                if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+
+                    openCamera();
+
+                } else {
+
+                    String[] permissionRequest = {Manifest.permission.CAMERA};
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        requestPermissions(permissionRequest, CAMERA_PERMISSION_REQUEST_CODE);
+                    }
+                }
             }
         });
 
@@ -261,6 +274,14 @@ public class MainActivity extends MainBaseActivity {
                 //the permission was not granted
                 Toast.makeText(this, R.string.storage_permission, Toast.LENGTH_LONG).show();
             }
+        } else if(requestCode == CAMERA_PERMISSION_REQUEST_CODE){
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                //we are ok to open the camera
+                openCamera();
+            }else {
+                //the permission was not granted
+                Toast.makeText(this, R.string.camera_permission, Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -275,6 +296,11 @@ public class MainActivity extends MainBaseActivity {
         intent.setDataAndType(data, type);
         startActivityForResult(intent, GALLERY_REQUEST_CODE);
 
+    }
+
+    private void openCamera(){
+        Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(cameraIntent, CAMERA_REQUEST_CODE);
     }
 
     @Override
@@ -300,6 +326,10 @@ public class MainActivity extends MainBaseActivity {
             }else if (requestCode == AUTH_REQUEST_CODE) {
                 user = mAuth.getCurrentUser();
                 saveShortcutToFirebase();
+            }else if (requestCode == CAMERA_REQUEST_CODE){
+                Bitmap image = (Bitmap) data.getExtras().get("data");
+                ImageView imageview = findViewById(R.id.imageView);
+                imageview.setImageBitmap(image);
             }
         } else if (resultCode == RESULT_CANCELED) {
             if (requestCode == AUTH_REQUEST_CODE) {
